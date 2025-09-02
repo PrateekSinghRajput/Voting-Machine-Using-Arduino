@@ -4,27 +4,22 @@
 #include <LiquidCrystal_I2C.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
-#include <time.h>  // For date/time formatting
+#include <time.h>  
 
-// LCD setup (0x27 for I2C address)
 LiquidCrystal_I2C lcd(0x27, 20, 4);
 
-// WiFi credentials
 const char* ssid = "Prateek";
 const char* password = "justdoelectronics@#12345";
 
-// NTP Client for IST timezone
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", 19800, 60000);
 
-// Button pins
 #define v1 27
 #define v2 26
 #define v3 25
 #define v4 33
 #define v5 14
 
-// Candidates and votes
 String candidate1 = "Narendra Modi";
 String candidate2 = "Rahul Gandhi";
 String candidate3 = "Shiv Sena";
@@ -32,13 +27,9 @@ String candidate4 = "Mamata Banerjee";
 
 int vote1 = 0, vote2 = 0, vote3 = 0, vote4 = 0;
 
-// GSM UART2 pins
 HardwareSerial gsmSerial(2);
-
-// Web server
 WebServer server(80);
 
-// Vote record structure & storage
 struct VoteRecord {
   String candidate;
   int voteNumber;
@@ -47,7 +38,6 @@ struct VoteRecord {
 VoteRecord voteRecords[500];
 int recordCount = 0;
 
-// Setup function
 void setup() {
   pinMode(v1, INPUT_PULLUP);
   pinMode(v2, INPUT_PULLUP);
@@ -63,13 +53,11 @@ void setup() {
 
   initializeGSM();
 
-  // LCD Welcome
   lcd.clear();
   lcd.setCursor(0, 1);
   lcd.print("Smart Voting Machine");
   delay(2000);
 
-  // Show candidates
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("1: " + candidate1);
@@ -82,7 +70,6 @@ void setup() {
   delay(2000);
   lcd.clear();
 
-  // Connect WiFi and NTP
   WiFi.begin(ssid, password);
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -92,9 +79,8 @@ void setup() {
   Serial.println("\nWiFi connected: " + WiFi.localIP().toString());
 
   timeClient.begin();
-  timeClient.setTimeOffset(19800);  // IST +5:30
+  timeClient.setTimeOffset(19800); 
 
-  // Web routes
   server.on("/", handleRoot);
   server.on("/vote1", []() {
     handleVote(1);
@@ -113,11 +99,9 @@ void setup() {
   server.begin();
 }
 
-// Main loop
 void loop() {
   timeClient.update();
 
-  // Display votes and time on LCD
   lcd.setCursor(0, 0);
   lcd.print(candidate1.substring(0, 12) + "   ");
   lcd.setCursor(15, 0);
@@ -134,10 +118,7 @@ void loop() {
   lcd.print(candidate4.substring(0, 12) + "   ");
   lcd.setCursor(15, 3);
   lcd.print(vote4);
-  //lcd.setCursor(8, 0);
-  //lcd.print(timeClient.getFormattedTime());
 
-  // Handle hardware votes
   if (digitalRead(v1) == LOW) {
     vote1++;
     logVote(candidate1, vote1);
@@ -189,7 +170,7 @@ void sendGSMCommand(const char* cmd) {
 }
 
 void sendVoteSMS(String candidate, int count) {
-  sendGSMCommand("AT+CMGS=\"+919975617490\"");  // Replace number
+  sendGSMCommand("AT+CMGS=\"+9199756174xx\"");  
   delay(350);
   gsmSerial.print("Vote cast for ");
   gsmSerial.print(candidate);
@@ -201,7 +182,7 @@ void sendVoteSMS(String candidate, int count) {
 }
 
 void sendResultSMS(String msg) {
-  sendGSMCommand("AT+CMGS=\"+919975617490\"");  // Replace number
+  sendGSMCommand("AT+CMGS=\"+9199756174xx\"");  
   delay(350);
   gsmSerial.print(msg);
   delay(350);
@@ -219,7 +200,7 @@ void logVote(String candidate, int num) {
 }
 
 String getFormattedDateTime() {
-  time_t epoch = timeClient.getEpochTime() + 19800;  // IST offset
+  time_t epoch = timeClient.getEpochTime() + 19800;  
   struct tm* ptm = gmtime(&epoch);
 
   char buf[30];
@@ -278,7 +259,7 @@ void displayAndSendResult() {
 void handleRoot() {
   timeClient.update();
 
-  unsigned long epoch = timeClient.getEpochTime() + 19800;  // IST offset
+  unsigned long epoch = timeClient.getEpochTime() + 19800;  
   struct tm* ptm = gmtime((time_t*)&epoch);
 
   char dateStr[20];
